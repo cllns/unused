@@ -21,6 +21,7 @@ library
                      , Unused.TermSearch.Internal
                      , Unused.Parser
                      , Unused.Types
+                     , Unused.GitContext
                      , Unused.Util
                      , Unused.Regex
                      , Unused.Aliases

@@ -12,6 +12,7 @@ import Control.Monad.Reader
 import Control.Monad.Except
 import Unused.Grouping (CurrentGrouping(..), groupedResponses)
 import Unused.Types (TermMatchSet, RemovalLikelihood(..))
+import Unused.GitContext (withGitHistory)
 import Unused.TermSearch (SearchResults(..), fromResults)
 import Unused.ResponseFilter (withOneOccurrence, withLikelihoods, ignoringPaths)
 import Unused.Cache
@@ -54,7 +55,7 @@ run = do
     liftIO $ renderHeader terms
     results <- withCache . (`executeSearch` terms) =<< searchRunner
 
-    printResults . (`parseResults` results) =<< loadAllConfigs
+    printResults =<< retrieveGitContext =<< fmap (`parseResults` results) loadAllConfigs
 
 termsWithAlternatesFromConfig :: App [String]
 termsWithAlternatesFromConfig = do
@@ -66,6 +67,11 @@ termsWithAlternatesFromConfig = do
 renderError :: AppError -> IO ()
 renderError (TagError e) = V.missingTagsFileError e
 renderError (InvalidConfigError e) = V.invalidConfigError e
+
+retrieveGitContext :: TermMatchSet -> App TermMatchSet
+retrieveGitContext tms = do
+    commitCount <- numberOfCommits
+    liftIO $ withGitHistory commitCount tms
 
 printResults :: TermMatchSet -> App ()
 printResults ts = do
@@ -131,3 +137,6 @@ searchRunner = oSearchRunner <$> ask
 
 runWithCache :: AppConfig m => m Bool
 runWithCache = not . oWithoutCache <$> ask
+
+numberOfCommits :: AppConfig m => m Int
+numberOfCommits = return 5

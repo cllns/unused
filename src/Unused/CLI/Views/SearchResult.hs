@@ -7,6 +7,8 @@ import Control.Arrow ((&&&))
 import qualified Data.Map.Strict as Map
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader
+import Data.Maybe (fromMaybe)
+import Data.List (intercalate)
 import Unused.Types
 import Unused.Grouping (Grouping(..), GroupedTerms)
 import Unused.CLI.Views.SearchResult.ColumnFormatter
@@ -79,8 +81,14 @@ printMatches r ms = do
         putStr $ "  " ++ printPath (tmPath m)
         setSGR [Reset]
 
+        setSGR [SetColor Foreground Dull Cyan]
+        setSGR [SetConsoleIntensity FaintIntensity]
+        putStr $ "  " ++ intercalate ", " (fromMaybe [] shas)
+        setSGR [Reset]
+
         putStr $ "  " ++ removalReason r
         putStr "\n"
   where
     termColor = likelihoodColor . rLikelihood . trRemoval
     removalReason = rReason . trRemoval
+    shas = (map gcSha . gcCommits) <$> trGitContext r
