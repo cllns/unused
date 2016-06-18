@@ -5,14 +5,15 @@ module Unused.GitContext
     ) where
 
 import qualified Data.Text as T
+import qualified Data.List as L
 import System.Process
-import Unused.Types (TermResults(trGitContext), GitContext(..), GitCommit(..), RemovalLikelihood(High), removalLikelihood)
+import Unused.Types (TermResults(trGitContext), GitContext(..), GitCommit(..), RemovalLikelihood(High), removalLikelihood, resultAliases)
 
 gitContextForResults :: Int -> (String, TermResults) -> IO [(String, TermResults)]
 gitContextForResults commitCount a@(token, results) =
     case removalLikelihood results of
         High -> do
-            gitContext <- logToGitContext <$> gitLogSearchFor commitCount token
+            gitContext <- logToGitContext <$> gitLogSearchFor commitCount (resultAliases results)
             return [(token, results { trGitContext = Just gitContext })]
         _ -> return [a]
 
@@ -26,7 +27,7 @@ logToGitContext =
   where
     shaList = map (T.unpack . head . T.splitOn " " . T.pack) . lines
 
-gitLogSearchFor :: Int -> String -> IO String
-gitLogSearchFor commitCount t = do
-  (_, results, _) <- readProcessWithExitCode "git" ["log", "-G", t, "--oneline", "-n", show commitCount] ""
+gitLogSearchFor :: Int -> [String] -> IO String
+gitLogSearchFor commitCount ts = do
+  (_, results, _) <- readProcessWithExitCode "git" ["log", "-G", L.intercalate "|" ts, "--oneline", "-n", show commitCount] ""
   return results

@@ -14,6 +14,7 @@ module Unused.Types
     , totalOccurrenceCount
     , appOccurrenceCount
     , removalLikelihood
+    , resultAliases
     ) where
 
 import qualified Data.Map.Strict as Map
@@ -75,6 +76,9 @@ appOccurrenceCount = oOccurrences . trAppOccurrences
 
 removalLikelihood :: TermResults -> RemovalLikelihood
 removalLikelihood = rLikelihood . trRemoval
+
+resultAliases :: TermResults -> [String]
+resultAliases = trTerms
 
 resultsFromMatches :: [TermMatch] -> TermResults
 resultsFromMatches m =
