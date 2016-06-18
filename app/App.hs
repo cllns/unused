@@ -41,6 +41,7 @@ data Options = Options
     , oGrouping :: CurrentGrouping
     , oWithoutCache :: Bool
     , oFromStdIn :: Bool
+    , oCommitCount :: Maybe Int
     }
 
 runProgram :: Options -> IO ()
@@ -70,7 +71,9 @@ renderError (InvalidConfigError e) = V.invalidConfigError e
 retrieveGitContext :: TermMatchSet -> App TermMatchSet
 retrieveGitContext tms = do
     commitCount <- numberOfCommits
-    liftIO $ loadGitContext commitCount tms
+    case commitCount of
+        Just c -> liftIO $ loadGitContext c tms
+        Nothing -> return tms
 
 printResults :: TermMatchSet -> App ()
 printResults ts = do
@@ -137,5 +140,5 @@ searchRunner = oSearchRunner <$> ask
 runWithCache :: AppConfig m => m Bool
 runWithCache = not . oWithoutCache <$> ask
 
-numberOfCommits :: AppConfig m => m Int
-numberOfCommits = return 5
+numberOfCommits :: AppConfig m => m (Maybe Int)
+numberOfCommits = oCommitCount <$> ask
