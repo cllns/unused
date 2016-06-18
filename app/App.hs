@@ -12,7 +12,6 @@ import Control.Monad.Reader
 import Control.Monad.Except
 import Unused.Grouping (CurrentGrouping(..), groupedResponses)
 import Unused.Types (TermMatchSet, RemovalLikelihood(..))
-import Unused.GitContext (withGitHistory)
 import Unused.TermSearch (SearchResults(..), fromResults)
 import Unused.ResponseFilter (withOneOccurrence, withLikelihoods, ignoringPaths)
 import Unused.Cache
@@ -20,7 +19,7 @@ import Unused.TagsSource
 import Unused.ResultsClassifier
 import Unused.Aliases (termsAndAliases)
 import Unused.Parser (parseResults)
-import Unused.CLI (SearchRunner(..), renderHeader, executeSearch, withRuntime)
+import Unused.CLI (SearchRunner(..), loadGitContext, renderHeader, executeSearch, withRuntime)
 import qualified Unused.CLI.Views as V
 
 type AppConfig = MonadReader Options
@@ -71,7 +70,7 @@ renderError (InvalidConfigError e) = V.invalidConfigError e
 retrieveGitContext :: TermMatchSet -> App TermMatchSet
 retrieveGitContext tms = do
     commitCount <- numberOfCommits
-    liftIO $ withGitHistory commitCount tms
+    liftIO $ loadGitContext commitCount tms
 
 printResults :: TermMatchSet -> App ()
 printResults ts = do

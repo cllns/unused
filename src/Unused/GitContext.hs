@@ -1,29 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Unused.GitContext
-    ( withGitHistory
+    ( gitContextForResults
     ) where
 
 import qualified Data.Text as T
-import Data.Map.Strict as Map (toList, fromList)
-import Control.Arrow ((&&&))
-import Control.Concurrent.ParallelIO
 import System.Process
-import Unused.Types (TermMatchSet, TermResults(trGitContext), GitContext(..), GitCommit(..), RemovalLikelihood(High), totalOccurrenceCount, removalLikelihood)
+import Unused.Types (TermResults(trGitContext), GitContext(..), GitCommit(..), RemovalLikelihood(High), removalLikelihood)
 
-withGitHistory :: Int -> TermMatchSet -> IO TermMatchSet
-withGitHistory _ tms =
-    Map.fromList <$> (parallel . map retrieve) listTerms <* stopGlobalPool
-  where
-    listTerms = Map.toList tms
-
-retrieve :: (String, TermResults) -> IO (String, TermResults)
-retrieve a@(token, results) =
-    case (totalOccurrenceCount &&& removalLikelihood) results of
-        (1, High) -> do
-            gitContext <- logToGitContext <$> gitLogSearchFor token
-            return (token, results { trGitContext = Just gitContext })
-        (_, _) -> return a
+gitContextForResults :: Int -> (String, TermResults) -> IO [(String, TermResults)]
+gitContextForResults commitCount a@(token, results) =
+    case removalLikelihood results of
+        High -> do
+            gitContext <- logToGitContext <$> (gitLogSearchFor commitCount) token
+            return [(token, results { trGitContext = Just gitContext })]
+        _ -> return [a]
 
 -- 58e219e Allow developer-authored configurations
 -- 307dd20 Introduce internal yaml configuration of auto low likelihood match handling
@@ -35,7 +26,7 @@ logToGitContext =
   where
     shaList = map (T.unpack . head . T.splitOn " " . T.pack) . lines
 
-gitLogSearchFor :: String -> IO String
-gitLogSearchFor t = do
-  (_, results, _) <- readProcessWithExitCode "git" ["log", "-G", t, "--oneline", "-n", "2"] ""
+gitLogSearchFor :: Int -> String -> IO String
+gitLogSearchFor commitCount t = do
+  (_, results, _) <- readProcessWithExitCode "git" ["log", "-G", t, "--oneline", "-n", show commitCount] ""
   return results
