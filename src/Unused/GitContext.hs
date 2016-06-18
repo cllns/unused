@@ -12,7 +12,7 @@ gitContextForResults :: Int -> (String, TermResults) -> IO [(String, TermResults
 gitContextForResults commitCount a@(token, results) =
     case removalLikelihood results of
         High -> do
-            gitContext <- logToGitContext <$> (gitLogSearchFor commitCount) token
+            gitContext <- logToGitContext <$> gitLogSearchFor commitCount token
             return [(token, results { trGitContext = Just gitContext })]
         _ -> return [a]
 
