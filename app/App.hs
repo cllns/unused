@@ -80,7 +80,7 @@ printResults ts = do
     filters <- optionFilters ts
     grouping <- groupingOptions
     format <- commitsToFormat <$> numberOfCommits
-    liftIO $ V.searchResults format$ groupedResponses grouping filters
+    liftIO $ V.searchResults format $ groupedResponses grouping filters
   where
     commitsToFormat c =
         case c of
