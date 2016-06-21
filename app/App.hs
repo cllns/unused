@@ -79,7 +79,14 @@ printResults :: TermMatchSet -> App ()
 printResults ts = do
     filters <- optionFilters ts
     grouping <- groupingOptions
-    liftIO $ V.searchResults $ groupedResponses grouping filters
+    format <- commitsToFormat <$> numberOfCommits
+    liftIO $ V.searchResults format$ groupedResponses grouping filters
+  where
+    commitsToFormat c =
+        case c of
+            Nothing -> V.Column
+            Just _ -> V.List
+
 
 loadAllConfigs :: App [LanguageConfiguration]
 loadAllConfigs = do
