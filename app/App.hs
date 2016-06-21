@@ -87,7 +87,6 @@ printResults ts = do
             Nothing -> V.Column
             Just _ -> V.List
 
-
 loadAllConfigs :: App [LanguageConfiguration]
 loadAllConfigs = do
     configs <- liftIO (B.first InvalidConfigError <$> loadAllConfigurations)
